@@ -11,37 +11,80 @@
 
 **1) Implementar RSA KEY GENERATOR**
 
-* **El mejor "s" para correr el algoritmo es 3, fue encontrado haciendo 3 tipos de pruebas que se pueden encontran en el "perm2a.ipynb"**, pero en la prueba donde nos dimos cuenta que sufre más fue en la de generar el siguiente primo con un valor de "s" bajo y mientas menor sea el "s" generaba primos incorrectos de 1000 primos que debia generar:
+* El código funciona con normalidad hasta un "k" de 59, despues del 60 no llega a generar las llaves. El constructor de "RSA_KEY_GENERATOR" busca una forma en que si hay un error con la encriptación y descencriptación aumente el "s" para el funcionamiento de "MILLER_RABIN" en razón de 10^n (10^1 = 10, 10^2 = 100, etc.).
 
 ```python
-def RSA_KEY_GENERATOR(k):
-  if k<8:    # generar primos con bits menores al dividirlos entre 2 no abria muchos, ocurria un loop, o un error.
-    k = 8
-  p = RANDOMGEN_PRIMOS(k//2, 50)
-  q = RANDOMGEN_PRIMOS(k//2, 50)
-  while p==q:
-    q = RANDOMGEN_PRIMOS(k//2, 50)
+class RSA:
+  def __init__(self, k):
 
-  n, phi = p*q, (p-1)*(q-1)
+    n = 1
+    while True:
+      self.e, self.d, self.n = self.RSA_KEY_GENERATOR(k, 10**n)
+      m = random.randint(2,self.n-1)
+      c = self.Cifrado(m)
+      if m == self.Descifrado(c):
+        break
+      else:
+        n += 1
 
-  while True:
+    print("RSA (s={:}, e={:}, d={:}, n={:}, phi={:})".format(10**n, self.e, self.d, self.n, self.phi))
+
+  def RSA_KEY_GENERATOR(self, k, s):
+    if k<8:    # generar primos con bits menores al dividirlos entre 2 no abria muchos, ocurria un loop, o un error.
+      k = 8
+    p = RANDOMGEN_PRIMOS(k//2, s)
+    q = RANDOMGEN_PRIMOS(k//2, s)
+    while p==q:
+      q = RANDOMGEN_PRIMOS(k//2, s)
+
+    n, self.phi = p*q, (p-1)*(q-1)
+
     e = random.randint(2,n-1)
-    while Euclides(e, phi)!=1:
-      e = random.randint(2, phi)
-    
-    d = Inversa(e, phi)
-    #d = (1 + 2*phi) // e
-    if d != e:
-      break
+    while Euclides(e, self.phi)!=1:
+      e = random.randint(2, n-1)
+      
+    d = Inversa(e, self.phi)
+    return e, d, n
 
-  return e, d, n
+  def Cifrado(self, m):
+    return EXPMOD(m, self.e, self.n)
 
-print(RSA_KEY_GENERATOR(8))
+  def Descifrado(self, c):
+    return EXPMOD(c, self.d, self.n)
+  
+  def get_edn(self):
+    return self.e, self.d, self.n
+
+
+rsa = RSA(59)
+
+mensaje = 13
+print("\nMensaje original: ", mensaje)
+c = rsa.Cifrado(mensaje)
+print("Cifrado: ", c)
+print("Descifrado: ", rsa.Descifrado(c))
+
+
+e,d,n = rsa.get_edn()
+
+print("\ne*d mod phi =", e*d % rsa.phi)    # e*d mod n = 1 mod n
+print("phi | (e*d - 1) = ", (e*d-1) % rsa.phi)   # phi | (e*d - 1)
+print("mgd(e, phi)={:}\t mgd(d,phi)={:}".format(Euclides(e, rsa.phi), Euclides(d, rsa.phi)))
+
 ```
 
-**output:**
+**Output:**
 ```
-(143, 47, 187)
+RSA (s=1000, e=35838547217257697, d=111491921678772113, n=207181330872770987, phi=207181329952084080)
+
+Mensaje original:  13
+Cifrado:  94807060877105423
+Descifrado:  13
+
+e*d mod phi = 1
+phi | (e*d - 1) =  0
+mgd(e, phi)=1	 mgd(d,phi)=1
+
 ```
 
 
@@ -68,7 +111,7 @@ for _ in range(10):
   print(" {:}\t|\t {:}\t|\t {:}".format(m, c, semi_m))
 
 ```
-**output:**
+**Output:**
 ```
  m			|	 c= P(m)		|	 m' = S(c)
 -------------------------------------------------------------------------------------
