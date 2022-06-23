@@ -70,7 +70,6 @@ e,d,n = rsa.get_edn()
 print("\ne*d mod phi =", e*d % rsa.phi)    # e*d mod n = 1 mod n
 print("phi | (e*d - 1) = ", (e*d-1) % rsa.phi)   # phi | (e*d - 1)
 print("mgd(e, phi)={:}\t mgd(d,phi)={:}".format(Euclides(e, rsa.phi), Euclides(d, rsa.phi)))
-
 ```
 
 **Output:**
@@ -84,45 +83,73 @@ Descifrado:  13
 e*d mod phi = 1
 phi | (e*d - 1) =  0
 mgd(e, phi)=1	 mgd(d,phi)=1
-
 ```
 
 
 **2) Crear un sistema RSA-64 (de k = 64 bits), y mostrar los valores para e, d y n. Generar una tabla con tres columnas m, c = P(m) y m' = S(c) - en teoría se cumple m' = m. Para las filas usar 10 valores números aleatorios distintos para m.**
 
 ```python
-
-
-e, d, n = RSA_KEY_GENERATOR(64)
-
-def Cifrado(m):
-  return EXPMOD(m, e, n)
-
-def Descifrado(c):
-  return EXPMOD(c, d, n)
-  
 print(" m\t\t\t|\t c= P(m)\t\t|\t m' = S(c)")
 print("-"*85)
 
 for _ in range(10):
   m = random.randint(2, n-1)
-  c = Cifrado(m)
-  semi_m = Descifrado(c)
+  c = rsa.Cifrado(m)
+  semi_m = rsa.Descifrado(c)
   print(" {:}\t|\t {:}\t|\t {:}".format(m, c, semi_m))
-
 ```
 **Output:**
 ```
  m			|	 c= P(m)		|	 m' = S(c)
 -------------------------------------------------------------------------------------
- 7207667428647347601	|	 1456710127478942461	|	 1921776242055237321
- 8889895259635010805	|	 996644895781868218	|	 3656710678640631361
- 2090665272231853218	|	 8505805083046487518	|	 4393305635060783204
- 5245426658132327654	|	 1052373919662924865	|	 4261715574112487861
- 5734268054426570574	|	 7712274410788929638	|	 2627475626434888780
- 2678122799341674164	|	 5473824777332633586	|	 6931399669838376076
- 1793397079633690066	|	 370944889834546759	|	 8933223213610329993
- 4945245920683046869	|	 1029912308029539944	|	 4071995179299853371
- 6857914339318320304	|	 20244746271920071	|	 4794475978790964109
- 805605239765009570	|	 5949357983074450188	|	 7024303945467704463
+ 176766408831992707	|	 61408374729407702	|	 176766408831992707
+ 183597512350914172	|	 195889659501958673	|	 183597512350914172
+ 136068147220167639	|	 38581632321644873	|	 136068147220167639
+ 44545726954338757	|	 212320741186060674	|	 44545726954338757
+ 159526595081864709	|	 64698867816577206	|	 159526595081864709
+ 102238157482647417	|	 198809144261950100	|	 102238157482647417
+ 42566669424109485	|	 173690110227850276	|	 42566669424109485
+ 187235573050613406	|	 191513237696801722	|	 187235573050613406
+ 70922504592093835	|	 160177844572460541	|	 70922504592093835
+ 129506786751827790	|	 66997309505938865	|	 129506786751827790
+```
+
+**EXTRA: Frases o palabras Cifradas y Descifradas.**
+
+```python
+def Cifrado(msg):
+  cade = ""
+  data = []
+  for m in msg:
+    me = rsa.Cifrado(ord(m))    # pasamos el valor en ascci de la palabra a el Cifrado RSA
+    encrip = me % ord('A') + 65   # rango [65, 122] donde 65='A' y 122='z'
+    cade += str("%c" % encrip)   # convertimos de decimal a word ascci
+    data.append(me)
+  return cade, data
+
+def Descifrado(msg, data):
+  cade = ""
+  for i in range(len(msg)):
+    med = rsa.Descifrado(data[i])
+    cade += str("%c" % med)
+  return cade
+
+words = ["Hola", "Juego", "pichanga", "lemur", "DBP", "Algebra", "Hulk", "Mina", "Gaa", "UCSP"]
+for word in words:
+  word_2, data = Cifrado(word)
+  word_3 = Descifrado(word_2, data)
+  print("(Original={:}, Cifrado={:}, Descifrado={:})".format(word, word_2, word_3))
+```
+**Output:**
+```
+(Original=Hola, Cifrado=qnb~, Descifrado=Hola)
+(Original=Juego, Cifrado=HFQCn, Descifrado=Juego)
+(Original=pichanga, Cifrado=CMBU~YC~, Descifrado=pichanga)
+(Original=lemur, Cifrado=bQ|FO, Descifrado=lemur)
+(Original=DBP, Cifrado=NSe, Descifrado=DBP)
+(Original=Algebra, Cifrado=LbCQbO~, Descifrado=Algebra)
+(Original=Hulk, Cifrado=qFb|, Descifrado=Hulk)
+(Original=Mina, Cifrado=QMY~, Descifrado=Mina)
+(Original=Gaa, Cifrado=C~~, Descifrado=Gaa)
+(Original=UCSP, Cifrado=NZTe, Descifrado=UCSP)
 ```
